@@ -1,0 +1,3 @@
+[submodule "functions/agents"]
+	path = functions/agents
+	url = https://github.com/MTU-Group-Project/ACT-agents
