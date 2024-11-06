@@ -35,16 +35,16 @@ def main(req):
 	if "report" not in stock_data and stock_data["state"] != "generating":
 		# Create thread for running crew and start it
 		reportThread = threading.Thread(target=run_crew, args=[ref, stock])
-		print("starting thread")
+		print("[THREAD] Starting...")
 		reportThread.start()
 		# Set state to generating and store in database
 		stock_data["state"] = "generating"
 		# Clear any previous data
-		stock_data["last_update"] = None
+		stock_data["progress"] = None
 		stock_data["error"] = None
 		
 		ref.update(stock_data)
-		del stock_data["last_update"]
+		del stock_data["progress"]
 		del stock_data["error"]
 
 	return stock_data
@@ -52,16 +52,23 @@ def main(req):
 
 # Function to be ran asynchronously
 def run_crew(ref, stock):
+	print("[THREAD] Started!")
 	try:
 		# Import crew and instantiate
 		from agents.src.act_agents.crew import ActAgentsCrew
 		crew = ActAgentsCrew()
 
+		# Track progress
+		progress = 0
+
 		# Register a callback function
 		def task_callback(output):
-			ref.update({"last_update": f"{output.agent} finished task"})
+			progress += 1
+			print(f"[CREW] {progress}/4 tasks complete")
+			ref.update({"progress": progress / 4})
 		crew.set_task_callback(task_callback)
 		
+		print("[CREW] Starting...")
 		# Run the crew to generate a report
 		report = crew.crew().kickoff(inputs = {
 			"stock": stock
@@ -70,12 +77,13 @@ def run_crew(ref, stock):
 		ref.update({
 			"state": "finished",
 			"report": str(report),
-			"last_update": None
+			"progress": None
 		})
 
 	except Exception as e:
+		print(f"[THREAD] Error: {e}")
 		ref.update({
 			"state": "error",
 			"error": str(e),
-			"last_update": None
+			"progress": None
 		})
