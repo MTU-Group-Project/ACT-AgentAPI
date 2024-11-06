@@ -22,6 +22,15 @@ def main(req):
 		"state": "empty"
 	}
 
+	# Default state
+	if "state" not in stock_data:
+		stock_data["state"] = "empty"
+
+	# If an error occured previously, clear it from the database
+	if "error" in stock_data:
+		ref.update({"error": None})
+		return stock_data
+
 	# If report does not exist, call the crew to generate one
 	if "report" not in stock_data and stock_data["state"] != "generating":
 		# Create thread for running crew and start it
