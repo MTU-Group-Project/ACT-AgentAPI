@@ -1,19 +1,22 @@
+class StatusException(Exception):
+	status = 0
+
 # 400 - Bad Request
-class BadRequest(Exception):
+class BadRequest(StatusException):
 	status = 400
 
 # 401 - Unauthorized
-class Unauthorized(Exception):
+class Unauthorized(StatusException):
 	status = 401
 
 # 403 - Forbidden
-class Forbidden(Exception):
+class Forbidden(StatusException):
 	status = 403
 
 # 404 - Not Found
-class NotFound(Exception):
+class NotFound(StatusException):
 	status = 404
 
 # 500 - Internal Server Error
-class InternalServerError(Exception):
+class InternalServerError(StatusException):
 	status = 500
