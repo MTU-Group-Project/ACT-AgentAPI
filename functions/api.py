@@ -8,12 +8,14 @@ def main(req):
 		raise status.BadRequest("No stock provided")
 	stock = req.args["stock"]
 
+	vaidation_stock = stock.replace("-", "")
+
 	#Input validation
-	if len(stock) > 4 or len(stock) < 2:
+	if len(vaidation_stock) > 6	 or len(vaidation_stock) < 2:
 		raise status.BadRequest("Invalid stock length")
-	if not stock.isalpha():
+	if not vaidation_stock.isalpha():
 		raise status.BadRequest("Stock must only contain letters")
-	if not stock.isupper():
+	if not vaidation_stock.isupper():
 		raise status.BadRequest("Stock must only contain uppercase letters")
 
 	# Get details about this stock from database
@@ -40,11 +42,11 @@ def main(req):
 		# Set state to generating and store in database
 		stock_data["state"] = "generating"
 		# Clear any previous data
-		stock_data["progress"] = None
+		stock_data["last_agent"] = None
 		stock_data["error"] = None
 		
 		ref.update(stock_data)
-		del stock_data["progress"]
+		del stock_data["last_agent"]
 		del stock_data["error"]
 
 	return stock_data
@@ -58,14 +60,28 @@ def run_crew(ref, stock):
 		from agents.src.act_agents.crew import ActAgentsCrew
 		crew = ActAgentsCrew()
 
+		tasks = [
+			f"Researching {stock}...",
+			"Calculating accounting ratios...",
+			f"Analysing {stock}, making recommendations...",
+			"Formatting output..."
+		]
+
 		# Track progress
 		progress = 0
 
+		def update_progress():
+			ref.update({"current_task": tasks[progress]})
+
+		update_progress()
+
 		# Register a callback function
 		def task_callback(output):
+			nonlocal progress
 			progress += 1
 			print(f"[CREW] {progress}/4 tasks complete")
-			ref.update({"progress": progress / 4})
+			if progress < len(tasks):
+				update_progress()
 		crew.set_task_callback(task_callback)
 		
 		print("[CREW] Starting...")
@@ -77,7 +93,7 @@ def run_crew(ref, stock):
 		ref.update({
 			"state": "finished",
 			"report": str(report),
-			"progress": None
+			"current_task": None
 		})
 
 	except Exception as e:
@@ -85,5 +101,5 @@ def run_crew(ref, stock):
 		ref.update({
 			"state": "error",
 			"error": str(e),
-			"progress": None
+			"current_task": None
 		})
