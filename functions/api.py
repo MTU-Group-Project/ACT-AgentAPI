@@ -8,6 +8,10 @@ def main(req):
 		raise status.BadRequest("No stock provided")
 	stock = req.args["stock"]
 
+	free_mode = False
+	if "premium" in req.args:
+		free_mode = True
+
 	vaidation_stock = stock.replace("-", "")
 
 	#Input validation
@@ -23,8 +27,6 @@ def main(req):
 	stock_data = ref.get() or {
 		"state": "empty"
 	}
-
-	free_mode = False
 
 	# Default state
 	if "state" not in stock_data:
