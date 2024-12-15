@@ -8,9 +8,9 @@ def main(req):
 		raise status.BadRequest("No stock provided")
 	stock = req.args["stock"]
 
-	free_mode = False
+	free_mode = True
 	if "premium" in req.args:
-		free_mode = True
+		free_mode = False
 
 	vaidation_stock = stock.replace("-", "")
 
